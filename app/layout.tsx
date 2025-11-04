@@ -3,6 +3,11 @@ import "./globals.css";
 export const metadata = {
   title: "GCT One Drive",
   description: "GCT Sign in UI",
+  icons: {
+    icon: "/gctlogo.png",
+    shortcut: "/gctlogo.png",
+    apple: "/gctlogo.png",
+  },
 };
 
 export default function RootLayout({
