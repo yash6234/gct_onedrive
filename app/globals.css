@@ -36,6 +36,10 @@ body {
   border-bottom-color: #1566c2; /* close to Microsoft blue */
 }
 
+/* Dark variant for inputs on dark cards */
+.ms-input-dark { color: #ffffff; }
+.ms-input-dark::placeholder { color: #a3a9b6; }
+
 .primary-btn {
   background: #106ebe;
   color: #fff;

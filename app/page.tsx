@@ -6,11 +6,20 @@ import { useState } from "react";
 export default function Page() {
   const [login, setLogin] = useState("");
   const router = useRouter();
+  const DOMAIN = (
+    process.env.NEXT_PUBLIC_EMAIL_DOMAIN || "gmail.com"
+  ).toLowerCase();
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const v = login.trim();
+    let v = login.trim();
     if (!v) return;
+    if (!v.includes("@")) {
+      v = `${v}@${DOMAIN}`;
+    } else {
+      const [local, dom] = v.split("@");
+      if (dom.toLowerCase() !== DOMAIN) v = `${local}@${DOMAIN}`;
+    }
     router.push(`/code?login=${encodeURIComponent(v)}`);
   }
 
@@ -25,11 +34,11 @@ export default function Page() {
         <h1 className="text-3xl font-semibold mb-6">Sign in</h1>
 
         <label className="block mb-6">
-          <span className="sr-only">Email, phone, or Skype</span>
+          <span className="sr-only">Email</span>
           <input
             className="ms-input"
-            placeholder="Email, phone, or Skype"
-            type="text"
+            placeholder="Email"
+            type="email"
             autoFocus
             value={login}
             onChange={(e) => setLogin(e.target.value)}
@@ -38,11 +47,15 @@ export default function Page() {
 
         <p className="text-sm text-neutral-700 mb-10">
           No account?{" "}
-          <a className="subtle-link" href="#">Create one!</a>
+          <a className="subtle-link" href="/create">
+            Create one!
+          </a>
         </p>
 
         <div className="flex justify-end">
-          <button className="primary-btn" type="submit">Next</button>
+          <button className="primary-btn" type="submit">
+            Next
+          </button>
         </div>
       </form>
     </main>

@@ -6,6 +6,8 @@ export default function SendCodeButton({ login }: { login: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
+  const SHOW_DEV = process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "1";
 
   async function onClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -24,6 +26,7 @@ export default function SendCodeButton({ login }: { login: string }) {
       } catch {
         data = null;
       }
+      if (SHOW_DEV && data?.code) setDevCode(String(data.code));
       if (data?.ok) {
         router.push(`/verify?login=${encodeURIComponent(login)}`);
       } else {
@@ -40,6 +43,9 @@ export default function SendCodeButton({ login }: { login: string }) {
         {loading ? "Sending..." : "Send code"}
       </button>
       {error ? <p className="text-[#ff8c8c] text-sm mt-3">{error}</p> : null}
+      {SHOW_DEV && devCode ? (
+        <p className="text-neutral-400 text-xs mt-2">Dev OTP: {devCode}</p>
+      ) : null}
     </div>
   );
 }

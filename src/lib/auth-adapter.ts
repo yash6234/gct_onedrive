@@ -3,6 +3,7 @@
 
 const RAW_BASE = process.env.NEST_BASE_URL;
 const BASE = RAW_BASE?.trim();
+const DEV_ALLOW_ANY_OTP = process.env.DEV_ALLOW_ANY_OTP === "1";
 const PATH_SEND = process.env.NEST_PATH_SEND_CODE || "/auth/otp/send";
 const PATH_VERIFY = process.env.NEST_PATH_VERIFY_CODE || "/auth/otp/verify";
 const PATH_ACCEPT = process.env.NEST_PATH_ACCEPT_TERMS || "/auth/accept-terms";
@@ -10,6 +11,23 @@ const PATH_LIST = process.env.NEST_PATH_LIST_FILES || "/files";
 
 type Json = Record<string, any>;
 
+function truthyFlag(v: unknown): boolean {
+  if (v === true) return true;
+  if (typeof v === "number") return v === 1;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    return (
+      s === "ok" ||
+      s === "success" ||
+      s === "true" ||
+      s === "1" ||
+      s === "yes" ||
+      s === "verified" ||
+      s === "valid"
+    );
+  }
+  return false;
+}
 function resolveUrl(path: string): string {
   if (!BASE) throw new Error("NEST_BASE_URL is not set");
   try {
@@ -23,57 +41,62 @@ async function post<T extends Json>(
   path: string,
   body: Json
 ): Promise<{ ok: boolean; data: T }> {
-  const url = resolveUrl(path);
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
-    if (process.env.DEBUG_AUTH === "1")
-      console.log("[auth] POST", url, res.status);
-    const data = (await res.json().catch(() => ({}))) as T;
-    return { ok: res.ok, data };
-  } catch (err) {
-    if (process.env.DEBUG_AUTH === "1")
-      console.warn("[auth] POST error", url, err);
-    return { ok: false, data: {} as T };
+  // In dev bypass mode, short‑circuit with ok
+  if (DEV_ALLOW_ANY_OTP && !BASE) {
+    return { ok: true, data: {} as T };
   }
+  const url = resolveUrl(path);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (process.env.DEBUG_AUTH === "1")
+    console.log("[auth] POST", url, res.status);
+  const data = (await res.json().catch(() => ({}))) as T;
+  if (process.env.DEBUG_AUTH === "1")
+    try { console.log("[auth] POST response", JSON.stringify(data)); } catch {}
+  return { ok: res.ok, data };
 }
 
 async function get<T extends Json>(
   path: string,
   params?: Record<string, string>
 ): Promise<T> {
+  // In dev bypass mode with no backend, return empty as JSON
+  if (DEV_ALLOW_ANY_OTP && !BASE) return {} as T;
   const url = new URL(resolveUrl(path));
   for (const [k, v] of Object.entries(params ?? {})) url.searchParams.set(k, v);
-  try {
-    const res = await fetch(url.toString(), { cache: "no-store" });
-    if (process.env.DEBUG_AUTH === "1")
-      console.log("[auth] GET", url.toString(), res.status);
-    return (await res.json().catch(() => ({}))) as T;
-  } catch (err) {
-    if (process.env.DEBUG_AUTH === "1")
-      console.warn("[auth] GET error", url.toString(), err);
-    return {} as T;
-  }
+  const res = await fetch(url.toString(), { cache: "no-store" });
+  if (process.env.DEBUG_AUTH === "1")
+    console.log("[auth] GET", url.toString(), res.status);
+  return (await res.json().catch(() => ({}))) as T;
 }
 
 export async function sendCode(login: string): Promise<boolean> {
+  if (DEV_ALLOW_ANY_OTP) return true;
   const { ok, data } = await post<Json>(PATH_SEND, {
     login,
     email: login,
     username: login,
     identifier: login,
   });
-  return ok || !!(data?.ok ?? data?.success ?? data?.sent ?? data?.status);
+  // For sending, accept either HTTP ok or an explicit success flag
+  return (
+    ok ||
+    truthyFlag((data as any)?.ok) ||
+    truthyFlag((data as any)?.success) ||
+    truthyFlag((data as any)?.sent) ||
+    truthyFlag((data as any)?.status)
+  );
 }
 
 export async function verifyCode(
   login: string,
   code: string
 ): Promise<boolean> {
+  if (DEV_ALLOW_ANY_OTP) return true;
   const { ok, data } = await post<Json>(PATH_VERIFY, {
     login,
     email: login,
@@ -83,28 +106,51 @@ export async function verifyCode(
     otp: code,
     token: code,
   });
+  // Strict: require explicit success-like flag values
   return (
-    ok ||
-    !!(
-      data?.ok ??
-      data?.valid ??
-      data?.verified ??
-      data?.success ??
-      data?.status
-    )
+    truthyFlag(data?.ok) ||
+    truthyFlag(data?.valid) ||
+    truthyFlag(data?.verified) ||
+    truthyFlag(data?.success) ||
+    truthyFlag(data?.status)
   );
 }
 
 export async function acceptTerms(login: string): Promise<boolean> {
+  if (DEV_ALLOW_ANY_OTP) return true;
   const { ok, data } = await post<Json>(PATH_ACCEPT, {
     login,
     email: login,
     accepted: true,
   });
-  return ok || !!(data?.ok ?? data?.accepted ?? data?.success ?? data?.status);
+  return (
+    truthyFlag(data?.ok) ||
+    truthyFlag(data?.accepted) ||
+    truthyFlag(data?.success) ||
+    truthyFlag(data?.status)
+  );
 }
 
 export async function listFiles(login: string) {
-  const data = await get<Json>(PATH_LIST, { login });
-  return (data?.files as any[]) || (data as any[]).files || [];
+  try {
+    if (DEV_ALLOW_ANY_OTP && !BASE) {
+      // Provide a simple mock list for dev/demo
+      return [
+        { name: "Welcome.docx", opened: "Today", owner: login || "Me" },
+        { name: "Budget.xlsx", opened: "Yesterday", owner: login || "Me" },
+        { name: "Pitch.pptx", opened: "1 week ago", owner: login || "Me" },
+      ];
+    }
+    const data = await get<Json>(PATH_LIST, { login });
+    return (data?.files as any[]) || (data as any[]).files || [];
+  } catch {
+    if (DEV_ALLOW_ANY_OTP) {
+      return [
+        { name: "Welcome.docx", opened: "Today", owner: login || "Me" },
+        { name: "Budget.xlsx", opened: "Yesterday", owner: login || "Me" },
+        { name: "Pitch.pptx", opened: "1 week ago", owner: login || "Me" },
+      ];
+    }
+    return [];
+  }
 }
