@@ -1,4 +1,5 @@
 import { listFiles } from "@/lib/auth-adapter";
+import ProfileMenu from "./ProfileMenu";
 
 export default async function Page({
   searchParams,
@@ -23,7 +24,7 @@ export default async function Page({
         </div>
         <div className="drive-right">
           <button className="drive-cta">Get more storage</button>
-          <div className="drive-avatar">YP</div>
+          <ProfileMenu login={login} />
         </div>
       </header>
 

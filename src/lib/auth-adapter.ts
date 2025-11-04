@@ -1,7 +1,8 @@
 // Minimal HTTP adapter for NestJS backend
 // Reads only NEST_* env vars and performs fetches to your server.
 
-const BASE = process.env.NEST_BASE_URL;
+const RAW_BASE = process.env.NEST_BASE_URL;
+const BASE = RAW_BASE?.trim();
 const PATH_SEND = process.env.NEST_PATH_SEND_CODE || "/auth/otp/send";
 const PATH_VERIFY = process.env.NEST_PATH_VERIFY_CODE || "/auth/otp/verify";
 const PATH_ACCEPT = process.env.NEST_PATH_ACCEPT_TERMS || "/auth/accept-terms";
@@ -9,12 +10,20 @@ const PATH_LIST = process.env.NEST_PATH_LIST_FILES || "/files";
 
 type Json = Record<string, any>;
 
+function resolveUrl(path: string): string {
+  if (!BASE) throw new Error("NEST_BASE_URL is not set");
+  try {
+    return new URL(path, BASE).toString();
+  } catch {
+    throw new Error(`Invalid NEST_BASE_URL: "${RAW_BASE}"`);
+  }
+}
+
 async function post<T extends Json>(
   path: string,
   body: Json
 ): Promise<{ ok: boolean; data: T }> {
-  if (!BASE) throw new Error("NEST_BASE_URL is not set");
-  const url = new URL(path, BASE).toString();
+  const url = resolveUrl(path);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -31,8 +40,7 @@ async function get<T extends Json>(
   path: string,
   params?: Record<string, string>
 ): Promise<T> {
-  if (!BASE) throw new Error("NEST_BASE_URL is not set");
-  const url = new URL(path, BASE);
+  const url = new URL(resolveUrl(path));
   for (const [k, v] of Object.entries(params ?? {})) url.searchParams.set(k, v);
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (process.env.DEBUG_AUTH === "1")

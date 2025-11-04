@@ -17,7 +17,13 @@ export default function SendCodeButton({ login }: { login: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login }),
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        // Prefer JSON but don’t crash if the body is empty or invalid
+        data = await res.json();
+      } catch {
+        data = null;
+      }
       if (data?.ok) {
         router.push(`/verify?login=${encodeURIComponent(login)}`);
       } else {
