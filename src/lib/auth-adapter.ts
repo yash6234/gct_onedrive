@@ -24,16 +24,22 @@ async function post<T extends Json>(
   body: Json
 ): Promise<{ ok: boolean; data: T }> {
   const url = resolveUrl(path);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-  if (process.env.DEBUG_AUTH === "1")
-    console.log("[auth] POST", url, res.status);
-  const data = (await res.json().catch(() => ({}))) as T;
-  return { ok: res.ok, data };
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    if (process.env.DEBUG_AUTH === "1")
+      console.log("[auth] POST", url, res.status);
+    const data = (await res.json().catch(() => ({}))) as T;
+    return { ok: res.ok, data };
+  } catch (err) {
+    if (process.env.DEBUG_AUTH === "1")
+      console.warn("[auth] POST error", url, err);
+    return { ok: false, data: {} as T };
+  }
 }
 
 async function get<T extends Json>(
@@ -42,10 +48,16 @@ async function get<T extends Json>(
 ): Promise<T> {
   const url = new URL(resolveUrl(path));
   for (const [k, v] of Object.entries(params ?? {})) url.searchParams.set(k, v);
-  const res = await fetch(url.toString(), { cache: "no-store" });
-  if (process.env.DEBUG_AUTH === "1")
-    console.log("[auth] GET", url.toString(), res.status);
-  return (await res.json().catch(() => ({}))) as T;
+  try {
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    if (process.env.DEBUG_AUTH === "1")
+      console.log("[auth] GET", url.toString(), res.status);
+    return (await res.json().catch(() => ({}))) as T;
+  } catch (err) {
+    if (process.env.DEBUG_AUTH === "1")
+      console.warn("[auth] GET error", url.toString(), err);
+    return {} as T;
+  }
 }
 
 export async function sendCode(login: string): Promise<boolean> {

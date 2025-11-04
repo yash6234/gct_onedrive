@@ -8,12 +8,17 @@ export default function VerifyForm({ login }: { login: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [otpKey, setOtpKey] = useState(0);
+  const DIRECT_TO_FILES = process.env.NEXT_PUBLIC_DIRECT_TO_FILES === "1";
 
   async function goNext(code: string) {
     if (submitting) return;
     setSubmitting(true);
     setError(null);
     try {
+      // Dev: optionally bypass verification entirely
+      if (DIRECT_TO_FILES) {
+        return router.push(`/drive?login=${encodeURIComponent(login)}`);
+      }
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
