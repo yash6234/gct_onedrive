@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-export default function ProfileMenu({ login }: { login: string }) {
+export default function UserMenu({ login }: { login: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -39,7 +39,10 @@ export default function ProfileMenu({ login }: { login: string }) {
           role="menu"
           className="absolute right-0 mt-2 w-48 rounded-md border border-[#283247] bg-[#141923] shadow-lg z-50"
         >
-          <div className="px-3 py-2 text-xs text-neutral-400 border-b border-[#21283a] truncate" title={login}>
+          <div
+            className="px-3 py-2 text-xs text-neutral-400 border-b border-[#21283a] truncate"
+            title={login}
+          >
             {login || "Signed in"}
           </div>
           <button
@@ -54,4 +57,3 @@ export default function ProfileMenu({ login }: { login: string }) {
     </div>
   );
 }
-

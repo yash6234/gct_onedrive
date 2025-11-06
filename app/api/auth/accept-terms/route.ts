@@ -8,4 +8,3 @@ export async function POST(req: NextRequest) {
   const ok = await adapter.acceptTerms(login ?? "");
   return Response.json({ ok });
 }
-

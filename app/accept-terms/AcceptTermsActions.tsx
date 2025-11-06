@@ -12,14 +12,14 @@ export default function TermsActions({ login }: { login: string }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/accept-terms", {
+      const res = await fetch("/api/auth/accept-terms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login }),
       });
       const data = await res.json();
       const ok = !!(data?.ok ?? data?.accepted ?? data?.success);
-      if (ok) return router.push(`/drive?login=${encodeURIComponent(login)}`);
+      if (ok) return router.push(`/files?login=${encodeURIComponent(login)}`);
       setError("Couldn’t record your acceptance. Try again.");
     } catch {
       setError("Couldn’t reach the server. Try again.");

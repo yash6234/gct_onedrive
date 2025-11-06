@@ -6,6 +6,8 @@ const BASE = RAW_BASE?.trim();
 const DEV_ALLOW_ANY_OTP = process.env.DEV_ALLOW_ANY_OTP === "1";
 const PATH_SEND = process.env.NEST_PATH_SEND_CODE || "/auth/otp/send";
 const PATH_VERIFY = process.env.NEST_PATH_VERIFY_CODE || "/auth/otp/verify";
+// Most Nest auth setups expose POST /auth/login for local strategy
+const PATH_LOGIN_PW = process.env.NEST_PATH_PASSWORD_LOGIN || "/auth/login";
 const PATH_ACCEPT = process.env.NEST_PATH_ACCEPT_TERMS || "/auth/accept-terms";
 const PATH_LIST = process.env.NEST_PATH_LIST_FILES || "/files";
 
@@ -82,7 +84,7 @@ export async function sendCode(login: string): Promise<boolean> {
     username: login,
     identifier: login,
   });
-  // For sending, accept either HTTP ok or an explicit success flag
+  // For sending, accept HTTP ok or explicit success-like flags from the backend
   return (
     ok ||
     truthyFlag((data as any)?.ok) ||
@@ -97,7 +99,7 @@ export async function verifyCode(
   code: string
 ): Promise<boolean> {
   if (DEV_ALLOW_ANY_OTP) return true;
-  const { ok, data } = await post<Json>(PATH_VERIFY, {
+  const { data } = await post<Json>(PATH_VERIFY, {
     login,
     email: login,
     username: login,
@@ -116,9 +118,107 @@ export async function verifyCode(
   );
 }
 
+export async function loginWithPassword(
+  login: string,
+  password: string
+): Promise<boolean> {
+  const body = {
+    login,
+    email: login,
+    username: login,
+    identifier: login,
+    password,
+    pass: password,
+  } as Json;
+
+  // Try configured path first, then common fallbacks
+  const candidates = [
+    PATH_LOGIN_PW,
+    '/auth/login',
+    '/auth/signin',
+    '/auth/password',
+    '/login',
+  ];
+
+  for (const p of candidates) {
+    try {
+      const { data } = await post<Json>(p, body);
+      const hasToken =
+        (typeof (data as any)?.token === 'string' && (data as any).token.length > 0) ||
+        (typeof (data as any)?.access_token === 'string' && (data as any).access_token.length > 0) ||
+        (typeof (data as any)?.accessToken === 'string' && (data as any).accessToken.length > 0) ||
+        (typeof (data as any)?.jwt === 'string' && (data as any).jwt.length > 0);
+
+      const hasUser =
+        (!!(data as any)?.user && typeof (data as any).user === 'object') ||
+        (!!(data as any)?.account && typeof (data as any).account === 'object') ||
+        (!!(data as any)?.profile && typeof (data as any).profile === 'object');
+
+      const messageOk = typeof (data as any)?.message === 'string' && /(success|logged|authenticated)/i.test((data as any).message);
+
+      const ok =
+        truthyFlag((data as any)?.ok) ||
+        truthyFlag((data as any)?.valid) ||
+        truthyFlag((data as any)?.authenticated) ||
+        truthyFlag((data as any)?.success) ||
+        truthyFlag((data as any)?.status) ||
+        hasToken ||
+        (hasUser && !(data as any)?.error) ||
+        messageOk;
+      if (ok) return true;
+    } catch {
+      // ignore and try next
+    }
+  }
+  return false;
+}
+
+export async function loginWithPasswordResult(
+  login: string,
+  password: string
+): Promise<{ ok: boolean; data: any }> {
+  const body = {
+    login,
+    email: login,
+    username: login,
+    identifier: login,
+    password,
+    pass: password,
+  } as Json;
+  const candidates = [PATH_LOGIN_PW, '/auth/login', '/auth/signin', '/auth/password', '/login'];
+  for (const p of candidates) {
+    try {
+      const { data } = await post<Json>(p, body);
+      const hasToken =
+        (typeof (data as any)?.token === 'string' && (data as any).token.length > 0) ||
+        (typeof (data as any)?.access_token === 'string' && (data as any).access_token.length > 0) ||
+        (typeof (data as any)?.accessToken === 'string' && (data as any).accessToken.length > 0) ||
+        (typeof (data as any)?.jwt === 'string' && (data as any).jwt.length > 0);
+      const hasUser =
+        (!!(data as any)?.user && typeof (data as any).user === 'object') ||
+        (!!(data as any)?.account && typeof (data as any).account === 'object') ||
+        (!!(data as any)?.profile && typeof (data as any).profile === 'object');
+      const messageOk = typeof (data as any)?.message === 'string' && /(success|logged|authenticated)/i.test((data as any).message);
+      const ok =
+        truthyFlag((data as any)?.ok) ||
+        truthyFlag((data as any)?.valid) ||
+        truthyFlag((data as any)?.authenticated) ||
+        truthyFlag((data as any)?.success) ||
+        truthyFlag((data as any)?.status) ||
+        hasToken ||
+        (hasUser && !(data as any)?.error) ||
+        messageOk;
+      if (ok) return { ok: true, data };
+      // return first non-empty data for diagnostics
+      if (Object.keys(data || {}).length) return { ok: false, data };
+    } catch {}
+  }
+  return { ok: false, data: {} };
+}
+
 export async function acceptTerms(login: string): Promise<boolean> {
   if (DEV_ALLOW_ANY_OTP) return true;
-  const { ok, data } = await post<Json>(PATH_ACCEPT, {
+  const { data } = await post<Json>(PATH_ACCEPT, {
     login,
     email: login,
     accepted: true,
@@ -142,7 +242,8 @@ export async function listFiles(login: string) {
       ];
     }
     const data = await get<Json>(PATH_LIST, { login });
-    return (data?.files as any[]) || (data as any[]).files || [];
+    const d: any = data as any;
+    return Array.isArray(d?.files) ? d.files : Array.isArray(d) ? d : [];
   } catch {
     if (DEV_ALLOW_ANY_OTP) {
       return [

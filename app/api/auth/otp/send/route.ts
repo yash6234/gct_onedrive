@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const ok = await adapter.sendCode(login);
     return Response.json({ ok });
   } catch (error) {
-    console.error("/api/send-code error", error);
+    console.error("/api/auth/otp/send error", error);
     return Response.json(
       { ok: false, error: "Failed to send code" },
       { status: 500 }

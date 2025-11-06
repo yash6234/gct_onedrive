@@ -44,3 +44,4 @@ export default function CodeBoxes({ length = 6, onComplete }: { length?: number;
     </div>
   );
 }
+
