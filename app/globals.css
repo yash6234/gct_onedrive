@@ -35,6 +35,7 @@ body {
 .ms-input:focus {
   border-bottom-color: #1566c2; /* close to Microsoft blue */
 }
+.ms-input-error { border-bottom-color: #e34b4b; }
 
 /* Dark variant for inputs on dark cards */
 .ms-input-dark { color: #ffffff; }
@@ -138,6 +139,18 @@ body {
   border-color: #e34b4b;
   box-shadow: 0 0 0 2px rgba(227,75,75,0.35);
 }
+
+/* Alternate sign-in options */
+.alt-options { display: grid; gap: 10px; text-align: left; }
+.alt-option {
+  display: grid; grid-template-columns: 28px 1fr; align-items: center;
+  gap: 12px; padding: 12px; border-radius: 10px;
+  background: #1b2230; border: 1px solid #283247; color: #d1d7e5;
+}
+.alt-option:hover { background: #232a3b; }
+.alt-option:disabled { opacity: .7; cursor: not-allowed; }
+.alt-icon { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(45deg,#66a4ff,#4f8cff); display:inline-block; }
+.alt-title { font-weight: 600; }
 
 /* ===== Terms illustration ===== */
 .terms-illustration {
