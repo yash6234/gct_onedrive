@@ -186,6 +186,7 @@ export async function loginWithPasswordResult(
     pass: password,
   } as Json;
   const candidates = [PATH_LOGIN_PW, '/auth/login', '/auth/signin', '/auth/password', '/login'];
+  let fallbackData: any = null;
   for (const p of candidates) {
     try {
       const { data } = await post<Json>(p, body);
@@ -209,11 +210,12 @@ export async function loginWithPasswordResult(
         (hasUser && !(data as any)?.error) ||
         messageOk;
       if (ok) return { ok: true, data };
-      // return first non-empty data for diagnostics
-      if (Object.keys(data || {}).length) return { ok: false, data };
+      if (!fallbackData && Object.keys(data || {}).length) {
+        fallbackData = data;
+      }
     } catch {}
   }
-  return { ok: false, data: {} };
+  return { ok: false, data: fallbackData || {} };
 }
 
 export async function acceptTerms(login: string): Promise<boolean> {

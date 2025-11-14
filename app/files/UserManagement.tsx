@@ -11,6 +11,8 @@ type User = {
 };
 
 export default function UserManagement({ login }: { login: string }) {
+  const DOMAIN =
+    (process.env.NEXT_PUBLIC_EMAIL_DOMAIN || "gmail.com").toLowerCase();
   const [users, setUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -54,11 +56,29 @@ export default function UserManagement({ login }: { login: string }) {
     setMobile(digits);
   }
 
+  function isValidEmailFormat(v: string) {
+    // Very lightweight check: something@something.tld
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
   async function saveUser() {
     const n = name.trim();
     const e = email.trim();
     const m = mobile.trim();
     const p = tempPassword.trim();
+    if (!e) {
+      setError("Name, Email, Mobile and Temporary password are required");
+      return;
+    }
+    if (!isValidEmailFormat(e)) {
+      setError("Enter email in the format: someone@example.com.");
+      return;
+    }
+    const [, dom] = e.split("@");
+    if (dom.toLowerCase() !== DOMAIN) {
+      setError(`Use your ${DOMAIN} email address.`);
+      return;
+    }
     if (!n || !e || !m || !p) {
       setError("Name, Email, Mobile and Temporary password are required");
       return;

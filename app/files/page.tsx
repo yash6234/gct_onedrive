@@ -5,6 +5,7 @@ import FilesTabs from "./FilesTabs";
 import UserManagement from "./UserManagement";
 import ProjectsSection from "./ProjectsSection";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export const metadata = { title: "Files" };
 
@@ -22,28 +23,28 @@ export default async function DrivePage({
   const section = Array.isArray(sectionRaw) ? sectionRaw[0] : sectionRaw || "home";
   const files = await listFiles(login);
 
-  // Superadmin visibility: env whitelist OR backend membership
-  const allowedStr = process.env.NEXT_PUBLIC_SUPERADMINS || process.env.SUPERADMINS || "";
-  const allowed = allowedStr
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  let isSuperAdmin = !!login && allowed.includes(login.toLowerCase());
-  if (!isSuperAdmin) {
-    const base = process.env.NEST_BASE_URL;
-    if (base && login) {
-      try {
-        const url = new URL('/users/superadmin', base).toString();
-        const res = await fetch(url, { cache: 'no-store' });
+  // Superadmin visibility: prefer login_type from backend, then roles endpoint
+  const cookieStore = await cookies();
+  const loginTypeCookie = cookieStore.get("login_type")?.value;
+  let isSuperAdmin =
+    typeof loginTypeCookie === "string" &&
+    loginTypeCookie.trim().toUpperCase() === "SUPERADMIN";
+
+  const base = process.env.NEST_BASE_URL;
+  if (!isSuperAdmin && base && login) {
+    try {
+      const url = new URL(
+        `/users-public/is-superadmin?email=${encodeURIComponent(login)}`,
+        base
+      ).toString();
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok) {
         const data = await res.json().catch(() => ({}));
-        const emails: string[] = Array.isArray(data)
-          ? (data as any[]).map((r: any) => String(r?.email || '').toLowerCase())
-          : Array.isArray(data?.users)
-          ? (data.users as any[]).map((r: any) => String(r?.email || '').toLowerCase())
-          : [];
-        isSuperAdmin = emails.includes(login.toLowerCase());
-      } catch {}
-    }
+        if (typeof (data as any)?.superadmin === "boolean") {
+          isSuperAdmin = !!(data as any).superadmin;
+        }
+      }
+    } catch {}
   }
 
   // Prevent direct access to admin-only sections for non-superadmins
