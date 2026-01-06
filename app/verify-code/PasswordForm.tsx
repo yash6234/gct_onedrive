@@ -23,11 +23,11 @@ export default function PasswordForm({ login }: { login: string }) {
       const data = await res.json().catch(() => ({}));
       const ok = !!(data?.ok ?? data?.authenticated ?? data?.success);
       if (ok) {
-        router.push(`/accept-terms?login=${encodeURIComponent(login)}`);
+        router.push(`/files?login=${encodeURIComponent(login)}`);
       } else if (data?.needsVerification) {
         // Frontend flow preference: still proceed to Terms; OTP is available from fallback link
         toast("Proceeding to terms. You can verify via code from the link if needed.");
-        router.push(`/accept-terms?login=${encodeURIComponent(login)}`);
+        router.push(`/files?login=${encodeURIComponent(login)}`);
       } else {
         setError(String(data?.error || "Incorrect password. Try again."));
       }
@@ -43,7 +43,7 @@ export default function PasswordForm({ login }: { login: string }) {
       <label className="block mb-3">
         <span className="sr-only">Password</span>
         <input
-          className="ms-input ms-input-dark"
+          className="ms-input"
           placeholder="Password"
           type="password"
           value={password}
@@ -52,7 +52,7 @@ export default function PasswordForm({ login }: { login: string }) {
         />
       </label>
       <div className="flex justify-center">
-        <button className="primary-btn-dark" disabled={submitting} type="submit" style={{ width: 160 }}>
+        <button className="primary-btn" disabled={submitting} type="submit" style={{ width: 160 }}>
           {submitting ? "Signing in…" : "Sign in"}
         </button>
       </div>

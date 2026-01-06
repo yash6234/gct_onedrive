@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import * as adapter from "@/lib/auth-adapter";
+import * as adapter from "@/lib/services/auth.service";
 
 export const runtime = "nodejs";
 
@@ -36,21 +36,20 @@ export async function POST(req: NextRequest) {
     };
 
     const loginType = extractLoginType(data);
-    if (loginType) {
-      try {
-        const store = await cookies();
-        const secure =
-          process.env.NEXT_SECURE_COOKIE === "1" ||
-          process.env.NODE_ENV === "production";
-        store.set("login_type", loginType, {
-          httpOnly: true,
-          secure,
-          sameSite: "lax",
-          path: "/",
-        });
-      } catch {
-        // ignore cookie write failures
-      }
+    // Always reset the cookie so a previous superadmin flag doesn't leak across accounts
+    try {
+      const store = await cookies();
+      const secure =
+        process.env.NEXT_SECURE_COOKIE === "1" ||
+        process.env.NODE_ENV === "production";
+      store.set("login_type", loginType || "USER", {
+        httpOnly: true,
+        secure,
+        sameSite: "lax",
+        path: "/",
+      });
+    } catch {
+      // ignore cookie write failures
     }
 
     return Response.json({ ok: true, loginType });

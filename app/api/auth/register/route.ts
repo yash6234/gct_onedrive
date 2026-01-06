@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { listUsers, notifyTempPassword } from "@/Users/yashpatel/authentication";
+import { listUsers, notifyTempPassword } from "@/lib/services/users.service";
 
 export const runtime = "nodejs";
 

@@ -19,6 +19,7 @@ export default function UserManagement({ login }: { login: string }) {
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [tempPassword, setTempPassword] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -32,8 +33,25 @@ export default function UserManagement({ login }: { login: string }) {
       try {
         const res = await fetch("/api/users", { cache: "no-store" });
         const data = await res.json().catch(() => ({}));
-        if (active && data?.ok && Array.isArray(data.users))
-          setUsers(data.users);
+        if (!active) return;
+        const ok = res.ok && data?.ok !== false;
+        if (!ok) {
+          setLoadError(
+            String(data?.error || `Couldn't load users (status ${res.status}).`)
+          );
+          return;
+        }
+        const rows = Array.isArray(data?.users)
+          ? data.users
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+          ? data
+          : [];
+        setUsers(rows as User[]);
+        setLoadError(null);
+      } catch (err: any) {
+        if (active) setLoadError(String(err?.message || "Fetch failed."));
       } finally {
         if (active) setLoading(false);
       }
@@ -122,10 +140,11 @@ export default function UserManagement({ login }: { login: string }) {
         toast.dismiss(toastId);
         toast.error(msg);
       }
-    } catch {
-      setError("Couldn't reach the server.");
+    } catch (err: any) {
+      const msg = String(err?.message || "Couldn't reach the server.");
+      setError(msg);
       toast.dismiss(toastId);
-      toast.error("Couldn't reach the server.");
+      toast.error(msg);
     }
   }
 
@@ -179,6 +198,14 @@ export default function UserManagement({ login }: { login: string }) {
             <div>—</div>
             <div>Loading…</div>
             <div>—</div>
+          </div>
+        ) : null}
+        {!loading && loadError ? (
+          <div className="user-row">
+            <div>—</div>
+            <div className="text-[#ff8c8c]">{loadError}</div>
+            <div>—</div>
+            <div className="text-right">—</div>
           </div>
         ) : null}
         {users.map((u, i) => (
@@ -253,8 +280,10 @@ export default function UserManagement({ login }: { login: string }) {
                                 `Delete failed (status ${res.status})`
                             )
                           );
-                      } catch {
-                        setError("Couldn't reach the server.");
+                      } catch (err: any) {
+                        setError(
+                          String(err?.message || "Couldn't reach the server.")
+                        );
                       }
                     }}
                   >
