@@ -1,0 +1,102 @@
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 680px;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  position: relative;
+}
+
+.back {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.brand {
+  color: #d1d5db;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.email {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.emailText {
+  opacity: 0.9;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.block {
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  color: #cfd5e0;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+.otpArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.otpRow {
+  display: flex;
+  justify-content: center;
+}
+
+.altWrap {
+  margin-top: 24px;
+}
+
+.linkSpacer {
+  display: inline-block;
+  margin-top: 12px;
+}
+
+.note {
+  color: #cfd5e0;
+  font-size: 14px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.error {
+  color: #ff8c8c;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}

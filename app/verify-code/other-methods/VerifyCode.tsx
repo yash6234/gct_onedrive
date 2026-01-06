@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import CodeBoxes from "../CodeBoxes";
+import styles from "./verify-code.module.css";
 
 export default function OtherWaysPage() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function OtherWaysPage() {
       });
       const data = await res.json().catch(() => ({}));
       const ok = !!(data?.ok ?? data?.valid);
-      if (ok) router.push(`/accept-terms?login=${encodeURIComponent(login)}`);
+      if (ok) router.push(`/files?login=${encodeURIComponent(login)}`);
       else setVerr("That code didn’t work. Try again.");
     } catch {
       setVerr("Couldn’t reach the server. Try again.");
@@ -56,45 +57,58 @@ export default function OtherWaysPage() {
   }
 
   return (
-    <main className="night-wrap min-h-dvh grid place-items-center p-6">
-      <section className="dark-card w-[680px] rounded-xl p-8 text-center relative">
-        <div className="absolute left-4 top-4">
-          <a className="back-btn" href={`/verify-code?login=${encodeURIComponent(login)}`} aria-label="Back">←</a>
+    <main className={`${styles.shell} night-wrap`}>
+      <section className={`${styles.card} dark-card`}>
+        <div className={styles.back}>
+          <a
+            className="back-btn"
+            href={`/verify-code?login=${encodeURIComponent(login)}`}
+            aria-label="Back"
+          >
+            ←
+          </a>
         </div>
 
-        <header className="flex items-center justify-center gap-3 mb-6">
+        <header className={styles.header}>
           <Image src="/exp_logo.png" alt="GCT" width={35} height={35} />
-          <span className="text-neutral-300 text-[16px] leading-none">Global Cad Technology</span>
+          <span className={styles.brand}>Global Cad Technology</span>
         </header>
 
-        <div className="inline-flex items-center gap-2 email-pill text-sm mb-4">
-          <span className="opacity-90">{login}</span>
+        <div className={`${styles.email} email-pill`}>
+          <span className={styles.emailText}>{login}</span>
         </div>
 
-        <h1 className="text-white text-2xl font-semibold mb-4">Verify with a code</h1>
+        <h1 className={styles.title}>Verify with a code</h1>
 
-        <div className="mb-4">
-          <p className="text-neutral-300 text-sm mb-3">Enter the code we sent to <span className="font-semibold">{login}</span>.</p>
-          <div className={verr ? "otp-error" : undefined}>
-            <div className="flex justify-center">
+        <div className={styles.block}>
+          <p className={styles.subtitle}>
+            Enter the code we sent to <span className={styles.bold}>{login}</span>.
+          </p>
+          <div className={verr ? `${styles.otpArea} otp-error` : styles.otpArea}>
+            <div className={styles.otpRow}>
               <CodeBoxes onComplete={verify} />
             </div>
-            {verr ? <p className="text-[#ff8c8c] text-sm mt-2">{verr}</p> : null}
+            {verr ? <p className={styles.error}>{verr}</p> : null}
           </div>
         </div>
 
-        <div className="alt-options mt-6">
+        <div className={`${styles.altWrap} alt-options`}>
           <button className="alt-option" onClick={resend} disabled={sending}>
             <span className="alt-icon" aria-hidden />
             <div className="alt-text">
               <div className="alt-title">Resend code to {login}</div>
             </div>
           </button>
-          <a className="link-dark mt-3" href={`/verify-code?login=${encodeURIComponent(login)}`}>Use your password instead</a>
+          <a
+            className={`link-dark ${styles.linkSpacer}`}
+            href={`/verify-code?login=${encodeURIComponent(login)}`}
+          >
+            Use your password instead
+          </a>
         </div>
 
-        {msg ? <p className="text-neutral-300 text-sm mt-3">{msg}</p> : null}
-        {err ? <p className="text-[#ff8c8c] text-sm mt-3">{err}</p> : null}
+        {msg ? <p className={styles.note}>{msg}</p> : null}
+        {err ? <p className={styles.error}>{err}</p> : null}
       </section>
     </main>
   );

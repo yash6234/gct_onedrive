@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import * as adapter from "@/lib/auth-adapter";
+import * as adapter from "@/lib/services/auth.service";
 import * as otp from "@/lib/otp-store";
 
 export const runtime = "nodejs";

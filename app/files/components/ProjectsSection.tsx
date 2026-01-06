@@ -14,7 +14,7 @@ type Project = {
   industry: string;
   team: string;
   startDate: string; // YYYY-MM-DD
-  endDate: string;   // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
   tags: string;
 };
 
@@ -101,7 +101,9 @@ export default function ProjectsSection({ login }: { login: string }) {
           <button className="chip">Archived</button>
         </div>
         <div className="ml-auto">
-          <button className="btn-primary" onClick={() => setOpen(true)}>+ Add project</button>
+          <button className="btn-primary" onClick={() => setOpen(true)}>
+            + Add project
+          </button>
         </div>
       </div>
 
@@ -134,16 +136,21 @@ export default function ProjectsSection({ login }: { login: string }) {
           <div key={i} className="drive-row">
             <div>
               <span className="file-icon" /> {p.title}
-              <div className="sub">{p.description ? p.description.slice(0, 60) + (p.description.length > 60 ? "…" : "") : ""}</div>
+              <div className="sub">
+                {p.description
+                  ? p.description.slice(0, 60) +
+                    (p.description.length > 60 ? "…" : "")
+                  : ""}
+              </div>
             </div>
             <div>{p.client || "—"}</div>
             <div>{p.category || "—"}</div>
             <div>{p.projectType || "—"}</div>
             <div>{p.startDate || "—"}</div>
             <div>{p.endDate || "—"}</div>
-            <div>{p.team || (login || "Me")}</div>
+            <div>{p.team || login || "Me"}</div>
             <div>{p.tags || "—"}</div>
-            <div>{(p.images.length + p.cadFiles.length) || 0} files</div>
+            <div>{p.images.length + p.cadFiles.length || 0} files</div>
           </div>
         ))}
       </div>
@@ -155,85 +162,159 @@ export default function ProjectsSection({ login }: { login: string }) {
             <div className="modal-body grid grid-cols-1 gap-4">
               <label className="block">
                 <span className="sr-only">Project Title</span>
-                <input className="ms-input ms-input-dark" placeholder="Project Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <input
+                  className="ms-input ms-input-dark"
+                  placeholder="Project Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="sr-only">Client</span>
-                  <input className="ms-input ms-input-dark" placeholder="Client" value={client} onChange={(e) => setClient(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Client"
+                    value={client}
+                    onChange={(e) => setClient(e.target.value)}
+                  />
                 </label>
                 <label className="block">
                   <span className="sr-only">Category / Domain</span>
-                  <input className="ms-input ms-input-dark" placeholder="Category / Domain" value={category} onChange={(e) => setCategory(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Category / Domain"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  />
                 </label>
               </div>
               <label className="block">
                 <span className="sr-only">Description</span>
-                <textarea className="ms-input ms-input-dark" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                <textarea
+                  className="ms-input ms-input-dark"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="sr-only">Technologies / Tools</span>
-                  <input className="ms-input ms-input-dark" placeholder="Technologies / Tools" value={technologies} onChange={(e) => setTechnologies(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Technologies / Tools"
+                    value={technologies}
+                    onChange={(e) => setTechnologies(e.target.value)}
+                  />
                 </label>
                 <label className="block">
                   <span className="sr-only">Project Type</span>
-                  <input className="ms-input ms-input-dark" placeholder="Project Type" value={projectType} onChange={(e) => setProjectType(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Project Type"
+                    value={projectType}
+                    onChange={(e) => setProjectType(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="sr-only">Industry Application</span>
-                  <input className="ms-input ms-input-dark" placeholder="Industry Application" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Industry Application"
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                  />
                 </label>
                 <label className="block">
-                  <span className="sr-only">Team / Author</span>
-                  <input className="ms-input ms-input-dark" placeholder="Team / Author" value={team} onChange={(e) => setTeam(e.target.value)} />
+                  <span className="sr-only">Team</span>
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Team"
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="text-sm text-neutral-300">Start date</span>
-                  <input className="ms-input ms-input-dark" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </label>
                 <label className="block">
                   <span className="text-sm text-neutral-300">End date</span>
-                  <input className="ms-input ms-input-dark" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="sr-only">Tags / Keywords</span>
-                  <input className="ms-input ms-input-dark" placeholder="Tags / Keywords (comma separated)" value={tags} onChange={(e) => setTags(e.target.value)} />
+                  <input
+                    className="ms-input ms-input-dark"
+                    placeholder="Tags / Keywords (comma separated)"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-sm text-neutral-300">3D Models / Images</span>
+                  <span className="text-sm text-neutral-300">
+                    3D Models / Images
+                  </span>
                   <input
                     className="ms-input ms-input-dark"
                     type="file"
                     multiple
                     accept="image/*,.obj,.fbx,.glb,.gltf,.stl,.3ds,.step,.stp"
-                    onChange={(e) => setImages(Array.from(e.target.files || []))}
+                    onChange={(e) =>
+                      setImages(Array.from(e.target.files || []))
+                    }
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm text-neutral-300">Download / CAD Files</span>
+                  <span className="text-sm text-neutral-300">
+                    Download / CAD Files
+                  </span>
                   <input
                     className="ms-input ms-input-dark"
                     type="file"
                     multiple
                     accept=".dwg,.dxf,.step,.stp,.iges,.igs,.sat,.catpart,.sldprt,.prt,.3dm,application/*"
-                    onChange={(e) => setCadFiles(Array.from(e.target.files || []))}
+                    onChange={(e) =>
+                      setCadFiles(Array.from(e.target.files || []))
+                    }
                   />
                 </label>
               </div>
               {error ? <p className="text-[#ff8c8c] text-sm">{error}</p> : null}
             </div>
             <div className="modal-actions">
-              <button className="btn-muted" onClick={() => { setOpen(false); reset(); }}>Cancel</button>
-              <button className="btn-primary" onClick={onSave}>Save</button>
+              <button
+                className="btn-muted"
+                onClick={() => {
+                  setOpen(false);
+                  reset();
+                }}
+              >
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={onSave}>
+                Save
+              </button>
             </div>
           </div>
         </div>
